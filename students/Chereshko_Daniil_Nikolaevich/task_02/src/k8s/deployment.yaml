@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app23
+  namespace: web23
+  labels:
+    app: app23
+    org.bstu.student.fullname: "Черешко Даниил Николаевич"
+    org.bstu.student.id: "220250"
+    org.bstu.group: "AS-576"
+    org.bstu.variant: "23"
+    org.bstu.course: "RSIOT"
+    org.bstu.owner: "Danik-oss"
+    org.bstu.student.slug: "as-576-220250-v23"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: app23
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: app23
+        org.bstu.student.slug: "as-576-220250-v23"
+    spec:
+      containers:
+        - name: app23
+          image: rsiot-23-k8s:stu-220250-v23
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9043
+              name: http
+          env:
+            - name: STU_ID
+              value: "220250"
+            - name: STU_GROUP
+              value: "AS-576"
+            - name: STU_VARIANT
+              value: "23"
+            - name: APP_PORT
+              value: "9043"
+          envFrom:
+            - configMapRef:
+                name: app23-config
+            - secretRef:
+                name: app23-secret
+          resources:
+            requests:
+              cpu: 150m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /live
+              port: 9043
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 9043
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3

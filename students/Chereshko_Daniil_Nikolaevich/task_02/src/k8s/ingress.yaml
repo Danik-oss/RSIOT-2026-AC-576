@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app23-ingress
+  namespace: web23
+  labels:
+    app: app23
+    org.bstu.student.fullname: "Черешко Даниил Николаевич"
+    org.bstu.student.id: "220250"
+    org.bstu.group: "AS-576"
+    org.bstu.variant: "23"
+    org.bstu.course: "RSIOT"
+    org.bstu.owner: "Danik-oss"
+    org.bstu.student.slug: "as-576-220250-v23"
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: app23.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: app23
+                port:
+                  number: 8043
