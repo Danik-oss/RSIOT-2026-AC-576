@@ -81,7 +81,6 @@ task_01/
 
 - Слушает порт 9032
 - Имеет endpoint `/health` для health check
-- Подключается к Postgres и использует префикс ключей `stu:220250:v26:`
 - Логирует метаданные студента (STU_ID, STU_GROUP, STU_VARIANT) при старте
 
 ### 2. Создание Dockerfile (multi-stage)
