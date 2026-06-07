@@ -1,4 +1,4 @@
-<p align="center">Министерство образования Республики Беларусь</p>
+﻿<p align="center">Министерство образования Республики Беларусь</p>
 <p align="center">Учреждение образования</p>
 <p align="center">“Брестский Государственный технический университет”</p>
 <p align="center">Кафедра ИИТ</p>
@@ -26,7 +26,7 @@
 
 ---
 
-### Вариант №26
+### Вариант №23
 
 ## Метаданные студента
 
@@ -35,7 +35,7 @@
 - **№ студенческого (StudentID):** 220250
 - **Email (учебный):** danikgad1q9@mail.ru
 - **GitHub username:** Danik-oss
-- **Вариант №:** 26
+- **Вариант №:** 23
 - **ОС и версия:** Windows 10 22H2
 - **Дата выполнения:** 07.06.2026
 
@@ -44,30 +44,29 @@
 - Dockerfile LABEL:
   - `org.bstu.student.fullname="Черешко Даниил Николаевич"`
   - `org.bstu.student.id="220250"`
-  - `org.bstu.group="as-576"`
-  - `org.bstu.variant="26"`
+  - `org.bstu.group="AS-576"`
+  - `org.bstu.variant="23"`
   - `org.bstu.course="RSIOT"`
 - docker-compose labels:
   - `org.bstu.owner="Danik-oss"`
-  - `org.bstu.student.slug="as-576-23-v26"`
+  - `org.bstu.student.slug="as-576-220250-v23"`
 
 ---
-
 
 ## Окружение и инструменты
 
 - Docker Desktop v4.53.0 — для контейнеризации приложения
 - Python 3.12 — язык программирования
 - Flask 3.1.3 — веб-фреймворк
-- Posgres-16 — база данных в памяти
-- Docker-compose — для оркестрации контейнеров
+- Redis — кэш зависимость для приложения
+- Docker Compose — для оркестрации контейнеров
 
 ## Структура репозитория c описанием содержимого
 
 ```text
 task_01/
 ├── src/
-│   ├── app.py                # Flask приложение с graceful shutdown
+│   ├── app.py                # Flask приложение с Redis и graceful shutdown
 │   ├── requirements.txt      # Python зависимости
 │   ├── Dockerfile            # Multi-stage Dockerfile
 │   └── docker-compose.yml    # Конфигурация Docker Compose
@@ -77,101 +76,83 @@ task_01/
 
 ## Подробное описание выполнения
 
-Создан простой Express-приложение (`src/app.py`), которое:
+Создан Python/Flask сервис (`src/app.py`), который:
 
-- Слушает порт 9032
-- Имеет endpoint `/health` для health check
+- Слушает порт 9043
+- Имеет endpoint `/live` для health check
+- Работает с Redis для хранения данных
 - Логирует метаданные студента (STU_ID, STU_GROUP, STU_VARIANT) при старте
 
 ### 2. Создание Dockerfile (multi-stage)
 
-Dockerfile (расположен в `src/Dockerfile`) состоит из двух стадий:
+Dockerfile (в `src/Dockerfile`) состоит из двух стадий:
 
-- **Builder stage**: использует `python:3.12-apline`, устанавливает зависимости
+- **Builder stage**: использует `python:3.12-alpine`, устанавливает зависимости
 - **Production stage**: использует `python:3.12-alpine`
-- Установлен USER 10001:10001 (непривилегированный пользователь)
+- Установлен USER 65532 для непривилегированного запуска
 - Добавлены LABEL с метаданными студента
-- Настроен HEALTHCHECK с проверкой endpoint `/ready`
-- Конфигурация через переменные окружения (PORT, STU_ID, STU_GROUP, STU_VARIANT)
+- Настроен HEALTHCHECK с проверкой endpoint `/live`
+- Конфигурация производится через переменные окружения
 
 ### 3. Создание docker-compose.yml
 
 Файл `src/docker-compose.yml` настраивает два сервиса:
 
-- **app**: приложение Python, зависит от Postgres
-- **posgres**: postgres:16-alpine с persistent volume
+- **app**: приложение Python, зависит от Redis
+- **redis**: Redis с persistent volume
 
 Именование согласно требованиям:
 
-- Контейнеры: `app-as-576-220250-v26`, `db-as-576-220250-v26`
-- Volume: `data_w26`
-- Network: `net-as-576-220250-v26`
-- Image tag: `rsiot-v26:stu-220250-v26`
+- Контейнеры: `app-as-576-220250-v23`, `redis-as-576-220250-v23`
+- Volume: `data_w23`
+- Network: `net-as-576-220250-v23`
+- Image tag: `rsiot-v23:stu-220250-v23`
 - Labels: `org.bstu.owner`, `org.bstu.student.slug`
 
 ### 4. Реализация graceful shutdown
 
-В `python.py` реализована обработка сигналов SIGTERM и SIGINT:
+В `src/app.py` реализована обработка сигналов SIGTERM и SIGINT:
 
-- При получении сигнала закрывается HTTP сервер
-- Логируется информация о завершении работы
+- При получении сигнала сервер корректно завершает работу
+- Логируется сообщение о завершении работы
 
 ### 5. Сборка и запуск
 
 **Команды для запуска:**
 
 ```cmd
-# Переход в директорию src
-cd src
+cd task_01/src
 
-# Сборка образа
-docker-compose build
-
-# Запуск контейнеров
-docker-compose up -d
-
-# Просмотр логов
-docker-compose logs -f app
-
-# Остановка (для проверки graceful shutdown)
-docker-compose down
+docker compose up --build
 ```
 
 **Проверка работы:**
 
 ```cmd
-# Проверка health endpoint
-curl http://localhost:9032/health
-
-# Проверка основного endpoint
-curl http://localhost:8001/
+curl http://localhost:9043/live
+curl http://localhost:9043/
 ```
 
-### Логи старта приложения
+### Пример логов
 
 ```text
-[INFO] Starting RSIOT app: student=220250 group=as-576 variant=26 port=9032
-[INFO] HTTP GET / from 172.19.0.1
-[INFO] 172.19.0.1 - - [07/Jun/2026 09:05:43] "GET / HTTP/1.1" 200 -
-[INFO] HTTP GET /ready from 172.19.0.1
-[INFO] 172.19.0.1 - - [07/Jun/2026 09:05:45] "GET /ready HTTP/1.1" 200 -
-[INFO] HTTP GET /health from 172.19.0.1
-[INFO] 172.19.0.1 - - [07/Jun/2026 09:05:50] "GET /health HTTP/1.1" 200 -
-[INFO] SIGTERM received, shutting down gracefully
+2026-06-07 10:00:00 [INFO] Starting RSIOT app: student=220250 group=AS-576 variant=23 port=9043
+2026-06-07 10:00:03 [INFO] HTTP GET / from 172.19.0.1
+2026-06-07 10:00:05 [INFO] HTTP GET /live from 172.19.0.1
+2026-06-07 10:00:10 [INFO] SIGTERM received, shutting down gracefully
 ```
 
+## Контрольный список
 
-## Контрольный список (checklist)
-
-- [ ✅ ] README с полными метаданными студента
-- [ ✅ ] Dockerfile (multi-stage, non-root, labels)
-- [ ✅ ] docker-compose.yml
-- [ ✅ ] Kubernetes манифесты
-- [ ✅ ] Health/Liveness/Readiness probes
-- [ ✅ ] Старт/остановка: логирование и graceful 
+- [ ✅ ] README с метаданными студента
+- [ ✅ ] Dockerfile (multi-stage, USER 65532, labels)
+- [ ✅ ] docker-compose.yml с Redis и volume `data_w23`
+- [ ✅ ] Реализован `/live` health endpoint
+- [ ✅ ] Graceful shutdown через SIGTERM
+- [ ✅ ] Кэширование зависимостей в Dockerfile
 
 ---
 
 ## Вывод
 
-В ходе выполнения лабораторной работы освоены базовые навыки работы с Docker и контейнеризацией приложений. Создан минимальный HTTP-сервис на Flask с multi-stage Dockerfile, размер финального образа составил ~81MB. Реализован запуск от непривилегированного пользователя (UID 10001) для повышения безопасности. Настроен docker-compose для оркестрации Flask-приложения и Postgres с использованием named volume для персистентности данных. Реализован graceful shutdown через параметры gunicorn. Настроено кэширование зависимостей для ускорения повторных сборок. Все метаданные (LABEL, labels, именование ресурсов) соответствуют требованиям варианта №26.
+В рамках варианта №23 выполнена контейнеризация Flask-приложения с Redis-зависимостью. Настроен multi-stage Dockerfile, приложение запущено от непривилегированного пользователя UID 65532, реализован `/live` health check и корректный graceful shutdown. Docker Compose обеспечивает зависимость от Redis и хранение данных в `data_w23`.
