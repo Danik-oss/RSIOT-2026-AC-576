@@ -1,0 +1,57 @@
+version: '3.9'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: rsiot-v26:stu-220250-v26
+    container_name: app-as-576-220250-v26
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "9032:9032"
+    environment:
+      STU_ID: "220250"
+      STU_GROUP: "as-576"
+      STU_VARIANT: "26"
+      APP_PORT: "9032"
+      PG_HOST: "db"
+      PG_PORT: "5432"
+      PG_USER: "appuser"
+      PG_PASSWORD: "changeme"
+      PG_DATABASE: "app_220250_v26"
+    labels:
+      org.bstu.owner: "Danik-oss"
+      org.bstu.student.slug: "as-576-220250-v26"
+    networks:
+      - net-as-576-220250-v26
+
+  db:
+    image: postgres:16-alpine
+    container_name: db-as-576-220250-v26
+    environment:
+      POSTGRES_DB: "app_220250_v26"
+      POSTGRES_USER: "appuser"
+      POSTGRES_PASSWORD: "changeme"
+    volumes:
+      - data_w26:/var/lib/postgresql/data
+    labels:
+      org.bstu.owner: "Danik-oss"
+      org.bstu.student.slug: "as-576-220250-v26"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d app_220250_v26"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - net-as-576-220250-v26
+
+volumes:
+  data_w26:
+    name: data_w26
+
+networks:
+  net-as-576-220250-v26:
+    name: net-as-576-220250-v26
