@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: state-as576-220250-v23
+  labels:
+    org.bstu.course: "RSIOT"
+    org.bstu.student.id: "220250"
+    org.bstu.group: "AS-576"
+    org.bstu.variant: "23"
+    org.bstu.owner: "Danik-oss"
+    org.bstu.student.slug: "as-576-220250-v23"
+  annotations:
+    org.bstu.student.fullname: "Черешко Даниил Николаевич"
+    org.bstu.group.cyrillic: "АС-576"
